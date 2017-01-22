@@ -7,6 +7,7 @@ public class WaveControlScript : MonoBehaviour {
     public int waveHeight = 5;
     public int waveWidth = 5;
     public int velocity = 3;
+    public float baseHeight = 0;
 
 	// Use this for initialization
 	void Start () {

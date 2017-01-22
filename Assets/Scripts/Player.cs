@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class Player : MonoBehaviour {
@@ -20,18 +21,28 @@ public class Player : MonoBehaviour {
 	// change this back to false later
 	public static bool gameStart = true;
 	public string resName;
-	private int health;
 	public float coolDownTime = 3;
 	private float damagedElapsed;
 	private int coins = 0;
 	private bool invulnerable = false;
 	private bool isShopOpen = false;
 
+	private float health;
+	private float maxHealth = 100;
+
+	public Text coinMsg;
+	public Image healthBar;
+
+	public Animator jumpAnimator;
+
 	// Use this for initialization
 	void Start () {
-		health = 100;
-		//animator = GetComponent<Animator> ();
-		//animator.enabled = false;
+		// TODO uncomment when I have the PlayerInfo file
+		//PlayerInfo.restore ();
+		health = maxHealth;
+		animator = GetComponent<Animator> ();
+		animator.enabled = false;
+		animator.speed = 0.8F * velocity;
 		damagedElapsed = coolDownTime;
 		returnSprite = GetComponent<SpriteRenderer> ().sprite;
 	}
@@ -65,19 +76,19 @@ public class Player : MonoBehaviour {
 			}
 
 			if (mostRecentDirection == left && goingLeft) {
-				//animator.enabled = !jumping;
+				animator.enabled = !jumping;
 				if (jumping)
 					;//GetComponent<SpriteRenderer> ().sprite = Resources.Load<Sprite> (resName);
 				float diff = velocity * Time.deltaTime;
 				newPos.x -= diff;
 			} else if (mostRecentDirection == right && goingRight) {
-				//animator.enabled = !jumping;
+				animator.enabled = !jumping;
 				if (jumping)
 					;//GetComponent<SpriteRenderer> ().sprite = Resources.Load<Sprite> (resName);
 				float diff = velocity * Time.deltaTime;
 				newPos.x += diff;
 			} else {
-				//animator.enabled = false;
+				animator.enabled = false;
 				if (jumping)
 					;//GetComponent<SpriteRenderer> ().sprite = Resources.Load<Sprite> (resName);
 				else
@@ -91,9 +102,9 @@ public class Player : MonoBehaviour {
 	}
 	public void setSpriteDir(bool right) {
 		Vector3 scaling = this.transform.localScale;
-		if (right && scaling.x > 0)
+		if (!right && scaling.x > 0)
 			scaling.x *= -1;
-		else if (!right && scaling.x < 0)
+		else if (right && scaling.x < 0)
 			scaling.x *= -1;
 		this.transform.localScale = scaling;
 	}
@@ -103,7 +114,7 @@ public class Player : MonoBehaviour {
 		//Debug.Log (collide.gameObject.name);
 	}*/
 	public void setJumping(bool status) {
-		jumping = false;
+		jumping = status;
 	}
 
 	public void setJumpForce(float force) {
@@ -122,11 +133,11 @@ public class Player : MonoBehaviour {
 		return velocity;
 	}
 
-	public void setHealth(int h) {
+	public void setHealth(float h) {
 		health = h;
 	}
 
-	public int getHealth() {
+	public float getHealth() {
 		return health;
 	}
 
@@ -136,26 +147,49 @@ public class Player : MonoBehaviour {
 
 	public void OnCollisionEnter2D(Collision2D collide) {
 		if (collide.gameObject.tag == "hazard") {
-			takeDamage ();
+			Debug.Log ("Hit Hazard");
+			if (damagedElapsed >= coolDownTime && !invulnerable) {
+				takeDamage ();
+				Destroy (collide.gameObject);
+			}
 		}
 	}
 
 	public void OnTriggerEnter2D(Collider2D collide) {
 		jumping = false;
 	}
+	public void OnTriggerStay2D(Collider2D collide) {
+		jumping = false;
+	}
+	/*public void OnTriggerExit2D(Collider2D collide) {
+		jumping = true;
+	}*/
 
 	private void takeDamage() {
-		if (damagedElapsed > coolDownTime && !invulnerable) {
-			health -= 10;
-			if (health <= 0) {
-				// TODO deal w/ death
-			}
-			damagedElapsed = 0;
+		Debug.Log ("Taking Damage");
+		health -= 10;
+		health = Mathf.Max (health, 0);
+		Vector3 scaling = healthBar.transform.localScale;
+		scaling.x = health / maxHealth;
+		healthBar.transform.localScale = scaling;
+		if (health == 0) {
+			//PlayerInfo.coins = coins;
+			//PlayerInfo.store(this);
+			isShopOpen = true;
+			// TODO deal w/ death
 		}
+		damagedElapsed = 0;
 	}
 
 	public void gainCoin() {
 		coins++;
+		coinMsg.text = "Coins: " + coins;
+	}
+
+	public int Coins
+	{
+		get { return coins; }
+		set { coins = value; }
 	}
 
 	public bool IsShopOpen
@@ -163,4 +197,16 @@ public class Player : MonoBehaviour {
 		get { return isShopOpen; }
 		set { isShopOpen = value; }
 	}
+
+	public float MaxHealth
+	{
+		get { return maxHealth; }
+		set { maxHealth = value; }
+	}
+
+	/*public void revive() {
+		health = maxHealth;
+		isShopOpen = false;
+		coins = PlayerInfo.coins;
+	}*/
 }

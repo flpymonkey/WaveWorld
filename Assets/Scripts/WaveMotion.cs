@@ -11,8 +11,12 @@ public class WaveMotion : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
-        this.gameObject.GetComponent<Rigidbody2D>().mass = 100;
+        Rigidbody2D rb = this.gameObject.GetComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
+        rb.mass = 100;
+        rb.bodyType = RigidbodyType2D.Kinematic;
+        rb.constraints = RigidbodyConstraints2D.FreezePositionX;
+        rb.freezeRotation = true;
     }
 	
 	// Update is called once per frame
@@ -30,7 +34,7 @@ public class WaveMotion : MonoBehaviour {
                     (Mathf.Pow((this.gameObject.transform.position.x - controls[i].GetComponent<WaveControlScript>().transform.position.x), 2) / waveWidth));
             }
         }
-        float v = (goalHeight - this.gameObject.transform.position.y) *
+        float v = (goalHeight - this.gameObject.transform.position.y + controls[0].GetComponent<WaveControlScript>().baseHeight) *
             controls[0].GetComponent<WaveControlScript>().velocity;
 
         this.gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(0, v);
